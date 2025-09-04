@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:pixel_pos/routes/app_routes.dart';
 import 'package:pixel_pos/theme/app_theme.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
-  runApp(const MyApp());
+  // Initialize FFI for Windows/Linux/Mac
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
+  runApp(const PixelPosApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class PixelPosApp extends StatelessWidget {
+  const PixelPosApp({super.key});
 
   // This widget is the root of your application.
   @override

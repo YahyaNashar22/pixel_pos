@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -20,6 +21,8 @@ class DatabaseHelper {
   Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, _dbName);
+
+    debugPrint("📂 Database path: $path");
 
     return await openDatabase(path, version: _dbVersion, onCreate: _onCreate);
   }

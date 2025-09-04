@@ -11,9 +11,17 @@ class DatabaseUsersService {
   }
 
   // register user
-  Future<int> registerUser(String username, String password) async {
+  Future<int> registerUser(
+    String username,
+    String password,
+    String role,
+  ) async {
     final db = await _dbHelper.database;
-    return db.insert('users', {'username': username, 'password': password});
+    return db.insert('users', {
+      'username': username,
+      'password': password,
+      'role': role,
+    });
   }
 
   // validate login

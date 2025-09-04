@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pixel_pos/theme/app_theme.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -11,10 +12,7 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton(
-              onPressed: () => Navigator.pushNamed(context, "/asd"),
-              child: const Text("Go to Sales"),
-            ),
+            Text("Mahmoud is gay!", style: AppTheme.textTheme.titleLarge),
           ],
         ),
       ),

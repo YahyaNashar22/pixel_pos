@@ -39,20 +39,28 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(title: const Text("Login")),
       body: Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            TextField(
-              controller: _username,
-              decoration: const InputDecoration(labelText: "Username"),
+        child: Center(
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width / 2,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                TextField(
+                  controller: _username,
+                  decoration: const InputDecoration(labelText: "Username"),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: _password,
+                  decoration: const InputDecoration(labelText: "Password"),
+                  obscureText: true,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(onPressed: _login, child: const Text("Login")),
+              ],
             ),
-            TextField(
-              controller: _password,
-              decoration: const InputDecoration(labelText: "Password"),
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(onPressed: _login, child: const Text("Login")),
-          ],
+          ),
         ),
       ),
     );

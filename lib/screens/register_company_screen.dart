@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 
 import 'package:pixel_pos/data/database_company_service.dart';
+import 'package:pixel_pos/data/database_users_service.dart';
 import 'package:pixel_pos/routes/app_routes.dart';
 
 class RegisterCompanyScreen extends StatefulWidget {
@@ -49,6 +50,8 @@ class _RegisterCompanyScreenState extends State<RegisterCompanyScreen> {
 
       // register company with the local image path
       await _dbCompanyService.registerCompany(_name.text, localImage.path);
+      final DatabaseUsersService dbUserService = DatabaseUsersService();
+      await dbUserService.registerUser('admin', 'admin', 'admin');
 
       if (mounted) {
         setState(() {
@@ -56,9 +59,17 @@ class _RegisterCompanyScreenState extends State<RegisterCompanyScreen> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Company registered successfully")),
+          const SnackBar(
+            content: Text(
+              "Company registered successfully\nusername: admin\tpassword: admin",
+            ),
+            duration: Duration(seconds: 3),
+          ),
         );
-        Navigator.pushReplacementNamed(context, AppRouter.login);
+
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, AppRouter.login);
+        }
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -82,52 +93,58 @@ class _RegisterCompanyScreenState extends State<RegisterCompanyScreen> {
     return Scaffold(
       appBar: AppBar(title: Text("Register Company")),
       body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              // company name input
-              TextFormField(
-                controller: _name,
-                decoration: const InputDecoration(
-                  labelText: "Company Name",
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter a company name";
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              // company logo input
-              GestureDetector(
-                onTap: _pickImage,
-                child: SizedBox(
-                  height: 150,
-                  child: _imageFile != null
-                      ? Image.file(_imageFile!, fit: BoxFit.contain)
-                      : const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.camera_alt, size: 50),
-                            Text("Click to select a logo"),
-                          ],
-                        ),
-                ),
-              ),
-              const SizedBox(height: 20),
+        padding: const EdgeInsets.all(20),
+        child: Center(
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width / 2,
+            height: MediaQuery.of(context).size.height / 2,
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                children: [
+                  // company name input
+                  TextFormField(
+                    controller: _name,
+                    decoration: const InputDecoration(
+                      labelText: "Company Name",
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return "Please enter a company name";
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  // company logo input
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: SizedBox(
+                      height: 150,
+                      child: _imageFile != null
+                          ? Image.file(_imageFile!, fit: BoxFit.contain)
+                          : const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.camera_alt, size: 50),
+                                Text("Click to select a logo"),
+                              ],
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
 
-              // register button
-              ElevatedButton(
-                onPressed: _isRegistering ? null : _registerCompany,
-                child: _isRegistering
-                    ? const CircularProgressIndicator()
-                    : Text("Register Company"),
+                  // register button
+                  ElevatedButton(
+                    onPressed: _isRegistering ? null : _registerCompany,
+                    child: _isRegistering
+                        ? const CircularProgressIndicator()
+                        : Text("Register Company"),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
