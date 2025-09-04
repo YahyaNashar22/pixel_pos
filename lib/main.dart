@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pixel_pos/routes/app_routes.dart';
 import 'package:pixel_pos/theme/app_theme.dart';
 
 void main() {
@@ -15,10 +16,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Pixel Pos',
       theme: AppTheme.darkTheme,
-      home: Scaffold(
-        appBar: AppBar(title: Text("Pixel Pos")),
-        body: Center(child: Text("Pixel Pos")),
-      ),
+      initialRoute: AppRouter.splash,
+      onGenerateRoute: AppRouter.generateRoute,
     );
   }
 }
