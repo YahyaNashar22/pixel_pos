@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:pixel_pos/data/database_company_service.dart';
 import 'package:pixel_pos/routes/app_routes.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -14,6 +15,19 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+
+  final DatabaseCompanyService _dbCompanyService = DatabaseCompanyService();
+
+  void _init() async {
+    await Future.delayed(const Duration(seconds: 3));
+    bool companyExists = await _dbCompanyService.checkIfCompanyExists();
+    if (!mounted) return;
+    if (companyExists) {
+      Navigator.pushReplacementNamed(context, AppRouter.login);
+    } else {
+      Navigator.pushReplacementNamed(context, AppRouter.registerCompany);
+    }
+  }
 
   @override
   void initState() {
@@ -29,10 +43,8 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    // Navigate after 3 seconds
-    Timer(const Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, AppRouter.home);
-    });
+    // Navigation logic after 3 seconds
+    _init();
   }
 
   @override
