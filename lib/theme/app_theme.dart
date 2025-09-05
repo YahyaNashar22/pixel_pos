@@ -92,5 +92,20 @@ class AppTheme {
       color: surfaceColor,
       margin: const EdgeInsets.all(padding),
     ),
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: surfaceColor,
+      contentTextStyle: const TextStyle(
+        color: Colors.white,
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+      ),
+      actionTextColor: secondaryColor,
+      disabledActionTextColor: Colors.white38,
+      elevation: 6,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(borderRadius)),
+      ),
+      behavior: SnackBarBehavior.floating,
+    ),
   );
 }
