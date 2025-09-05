@@ -33,7 +33,12 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
     } catch (e) {
-      print(e);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Something went wrong")));
+        debugPrint("$e");
+      }
     }
   }
 

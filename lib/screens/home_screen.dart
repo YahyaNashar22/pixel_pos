@@ -69,18 +69,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const Spacer(),
 
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(40),
-                    child: Image.file(
-                      File(company!.logo),
-                      width: 250,
-                      height: 250,
-                      fit: BoxFit.cover,
-                    ),
+                ClipRRect(
+                  child: Image.file(
+                    File(company!.logo),
+                    width: 150,
+                    height: 150,
+                    fit: BoxFit.cover,
                   ),
                 ),
+
+                const Spacer(),
 
                 // Logout button
                 ListTile(
@@ -92,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   onTap: () {
-                    // TODO: Add logout logic
+                    session.clear(context);
                   },
                 ),
               ],
