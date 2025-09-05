@@ -3,6 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:pixel_pos/models/company_model.dart';
 import 'package:pixel_pos/models/user_model.dart';
+import 'package:pixel_pos/screens/dashboard_screen.dart';
+import 'package:pixel_pos/screens/inventory_screen.dart';
+import 'package:pixel_pos/screens/pos_screen.dart';
+import 'package:pixel_pos/screens/settings_screen.dart';
 import 'package:pixel_pos/services/session_manager.dart';
 import 'package:pixel_pos/theme/app_theme.dart';
 
@@ -29,9 +33,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Screens for navigation
   final List<Widget> _screens = const [
-    Center(child: Text("🏠 Home", style: TextStyle(fontSize: 22))),
-    Center(child: Text("📊 Dashboard", style: TextStyle(fontSize: 22))),
-    Center(child: Text("⚙️ Settings", style: TextStyle(fontSize: 22))),
+    PosScreen(),
+    InventoryScreen(),
+    DashboardScreen(),
+    SettingsScreen(),
   ];
   @override
   Widget build(BuildContext context) {
@@ -63,9 +68,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Divider(color: Colors.white24, thickness: 1),
 
                 // Navigation menu
-                _buildNavItem(Icons.home, "Home", 0),
-                _buildNavItem(Icons.dashboard, "Dashboard", 1),
-                _buildNavItem(Icons.settings, "Settings", 2),
+                _buildNavItem(Icons.home, "POS", 0),
+                _buildNavItem(Icons.inventory, "Inventory", 1),
+                _buildNavItem(Icons.dashboard, "Dashboard", 2),
+                _buildNavItem(Icons.settings, "Settings", 3),
 
                 const Spacer(),
 
