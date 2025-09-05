@@ -1,4 +1,7 @@
 import 'package:pixel_pos/data/database_helper.dart';
+import 'package:pixel_pos/models/company_model.dart';
+import 'package:pixel_pos/models/user_model.dart';
+import 'package:pixel_pos/services/session_manager.dart';
 
 class DatabaseUsersService {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
@@ -32,6 +35,23 @@ class DatabaseUsersService {
       where: 'username = ? AND password = ?',
       whereArgs: [username, password],
     );
-    return result.isNotEmpty;
+    if (result.isNotEmpty) {
+      // create user object
+      final user = UserModel.fromMap(result.first);
+
+      // fetch company
+      final companyResult = await db.query('company', limit: 1);
+      CompanyModel? company;
+      if (companyResult.isNotEmpty) {
+        company = CompanyModel.fromMap(companyResult.first);
+      }
+
+      // save results to session
+      final session = SessionManager();
+      session.setUser(user);
+      if (company != null) session.setCompany(company);
+      return true;
+    }
+    return false;
   }
 }
