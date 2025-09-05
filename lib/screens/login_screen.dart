@@ -15,21 +15,25 @@ class _LoginScreenState extends State<LoginScreen> {
   final DatabaseUsersService _dbUserService = DatabaseUsersService();
 
   void _login() async {
-    bool success = await _dbUserService.loginUser(
-      _username.text,
-      _password.text,
-    );
-    if (success && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Login Successful")));
-      Navigator.pushReplacementNamed(context, AppRouter.home);
-    } else {
-      if (mounted) {
+    try {
+      bool success = await _dbUserService.loginUser(
+        _username.text,
+        _password.text,
+      );
+      if (success && mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text("Invalid Credentials")));
+        ).showSnackBar(const SnackBar(content: Text("Login Successful")));
+        Navigator.pushReplacementNamed(context, AppRouter.home);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("Invalid Credentials")));
+        }
       }
+    } catch (e) {
+      print(e);
     }
   }
 

@@ -1,4 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:pixel_pos/models/company_model.dart';
+import 'package:pixel_pos/models/user_model.dart';
+import 'package:pixel_pos/services/session_manager.dart';
 import 'package:pixel_pos/theme/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -9,7 +14,18 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final SessionManager session = SessionManager();
+  UserModel? user;
+  CompanyModel? company;
+
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    user = session.currentUser;
+    company = session.currentCompany;
+  }
 
   // Screens for navigation
   final List<Widget> _screens = const [
@@ -35,12 +51,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Icon(Icons.person, color: Colors.white),
                   ),
                   title: Text(
-                    "Mahmoud", // TODO: Replace with logged user name
+                    user!.username,
                     style: AppTheme.textTheme.bodyLarge,
                   ),
                   subtitle: Text(
-                    "Admin / " + // TODO: Replace with logged user role
-                        "Pixelerion POS", // TODO: Replace with company  name
+                    "${user!.role} / ${company!.name}",
                     style: AppTheme.textTheme.bodyMedium,
                   ),
                 ),
@@ -58,8 +73,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.all(20),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(40),
-                    child: Image.asset(
-                      'assets/icons/icon_logo.png', //TODO: replace with db company image
+                    child: Image.file(
+                      File(company!.logo),
                       width: 250,
                       height: 250,
                       fit: BoxFit.cover,

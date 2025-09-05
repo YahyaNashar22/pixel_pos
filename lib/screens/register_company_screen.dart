@@ -42,7 +42,11 @@ class _RegisterCompanyScreenState extends State<RegisterCompanyScreen> {
       });
 
       // save the image locally and get the new path
-      final appDir = await getApplicationDocumentsDirectory();
+      final baseDir = await getApplicationDocumentsDirectory();
+      final appDir = Directory(path.join(baseDir.path, "pixel_pos"));
+      if (!await appDir.exists()) {
+        await appDir.create(recursive: true);
+      }
       final fileName = path.basename(_imageFile!.path);
       final File localImage = await _imageFile!.copy(
         '${appDir.path}/$fileName',
