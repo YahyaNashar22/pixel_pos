@@ -51,9 +51,16 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 // User info
                 ListTile(
-                  leading: const CircleAvatar(
+                  leading: CircleAvatar(
                     backgroundColor: Colors.white24,
-                    child: Icon(Icons.person, color: Colors.white),
+                    child: ClipOval(
+                      child: Image.file(
+                        File(company!.logo),
+                        width: 150,
+                        height: 150,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                   title: Text(
                     user!.username,
@@ -72,17 +79,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 _buildNavItem(Icons.inventory, "Inventory", 1),
                 _buildNavItem(Icons.dashboard, "Dashboard", 2),
                 _buildNavItem(Icons.settings, "Settings", 3),
-
-                const Spacer(),
-
-                ClipRRect(
-                  child: Image.file(
-                    File(company!.logo),
-                    width: 150,
-                    height: 150,
-                    fit: BoxFit.cover,
-                  ),
-                ),
 
                 const Spacer(),
 

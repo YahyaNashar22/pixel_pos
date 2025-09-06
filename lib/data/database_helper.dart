@@ -72,7 +72,8 @@ FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE
     await db.execute('''
 CREATE TABLE invoices(
 id INTEGER PRIMARY KEY AUTOINCREMENT,
-number INTEGER NOT NULL,
+name TEXT NOT NULL,
+status TEXT NOT NULL,
 total DOUBLE NOT NULL
 )
 ''');
