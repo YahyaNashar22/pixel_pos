@@ -1,10 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:pixel_pos/screens/pos_order_screen.dart';
+import 'package:pixel_pos/screens/pos_tables_screen.dart';
+import 'package:pixel_pos/theme/app_theme.dart';
 
-class PosScreen extends StatelessWidget {
+class PosScreen extends StatefulWidget {
   const PosScreen({super.key});
 
   @override
+  State<PosScreen> createState() => _PosScreenState();
+}
+
+class _PosScreenState extends State<PosScreen> {
+  int _selectedIndex = 0;
+
+  final List<Widget> _screens = [PosOrderScreen(), PosTablesScreen()];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return const Center(child: Text("🏠 POS", style: TextStyle(fontSize: 22)));
+    return Scaffold(
+      appBar: AppBar(title: const Text("POS")),
+      body: _screens[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        selectedItemColor: AppTheme.primaryColor,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.add_box), label: "POS"),
+          BottomNavigationBarItem(icon: Icon(Icons.table_bar), label: "Tables"),
+        ],
+      ),
+    );
   }
 }
