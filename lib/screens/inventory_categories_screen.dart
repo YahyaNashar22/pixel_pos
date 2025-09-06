@@ -13,11 +13,15 @@ class InventoryCategoriesScreen extends StatefulWidget {
 class _InventoryCategoriesScreenState extends State<InventoryCategoriesScreen> {
   final DatabaseCategoryService _dbCategoryService = DatabaseCategoryService();
   List<Map<String, dynamic>> _categories = [];
+  List<Map<String, dynamic>> _filteredCategories = [];
+
+  final TextEditingController _searchController = TextEditingController();
 
   Future<void> _loadCategories() async {
     final categoriesResult = await _dbCategoryService.getAllCategories();
     setState(() {
       _categories = categoriesResult;
+      _filteredCategories = _categories;
     });
   }
 
@@ -90,45 +94,86 @@ class _InventoryCategoriesScreenState extends State<InventoryCategoriesScreen> {
     await _loadCategories();
   }
 
+  void _filterCategories(String query) {
+    final String q = query.toLowerCase();
+    setState(() {
+      _filteredCategories = _categories.where((c) {
+        final categoryName = c['name'].toString().toLowerCase();
+        return categoryName.contains(q);
+      }).toList();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _loadCategories();
+
+    _searchController.addListener(() {
+      _filterCategories(_searchController.text);
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _searchController.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _categories.isEmpty
-          ? const Center(child: Text("No categories found"))
-          : ListView.builder(
-              itemCount: _categories.length,
-              itemBuilder: (context, index) {
-                final cat = _categories[index];
-                return ListTile(
-                  title: Text(cat['name']),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        onPressed: () => _editCategory(cat['id'], cat['name']),
-                        icon: const Icon(
-                          Icons.edit,
-                          color: AppTheme.primaryColor,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => _deleteCategory(cat['id']),
-                        icon: const Icon(
-                          Icons.delete,
-                          color: AppTheme.errorColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+      body: Column(
+        children: [
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: "Search by product or category...",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
+          ),
+          Expanded(
+            child: _filteredCategories.isEmpty
+                ? const Center(child: Text("No categories found"))
+                : ListView.builder(
+                    itemCount: _filteredCategories.length,
+                    itemBuilder: (context, index) {
+                      final cat = _filteredCategories[index];
+                      return ListTile(
+                        title: Text(cat['name']),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              onPressed: () =>
+                                  _editCategory(cat['id'], cat['name']),
+                              icon: const Icon(
+                                Icons.edit,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => _deleteCategory(cat['id']),
+                              icon: const Icon(
+                                Icons.delete,
+                                color: AppTheme.errorColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addCategory,
         child: const Icon(Icons.add),

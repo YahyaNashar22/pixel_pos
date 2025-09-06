@@ -178,7 +178,14 @@ class _InventoryProductsScreenState extends State<InventoryProductsScreen> {
                     itemBuilder: (context, index) {
                       final prod = _filteredProducts[index];
                       return ListTile(
-                        title: Text("${prod['name']} - ${prod['price']}"),
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(prod['name']),
+                            Text("${prod['price']}\$"),
+                          ],
+                        ),
                         subtitle: Text(
                           _getCategoryName(prod['category_id']),
                           style: const TextStyle(
