@@ -29,7 +29,7 @@ class _InventoryCategoriesScreenState extends State<InventoryCategoriesScreen> {
         title: const Text("Add Category"),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(hintText: "Category name"),
+          decoration: const InputDecoration(labelText: "Category Name"),
         ),
         actions: [
           TextButton(
@@ -61,7 +61,7 @@ class _InventoryCategoriesScreenState extends State<InventoryCategoriesScreen> {
         title: const Text("Edit Category"),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(hintText: "Category name"),
+          decoration: const InputDecoration(labelText: "Category Name"),
         ),
         actions: [
           TextButton(
