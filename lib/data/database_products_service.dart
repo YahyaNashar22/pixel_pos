@@ -16,7 +16,7 @@ class DatabaseProductService {
   // get all products
   Future<List<Map<String, dynamic>>> getAllProducts() async {
     final db = await _dbHelper.database;
-    return await db.query('products');
+    return await db.query('products', orderBy: 'name ASC');
   }
 
   // get by id
@@ -49,5 +49,16 @@ class DatabaseProductService {
   Future<int> deleteProduct(int id) async {
     final db = await _dbHelper.database;
     return await db.delete('products', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // get all products with category name
+  Future<List<Map<String, dynamic>>> getAllProductsWithCategory() async {
+    final db = await _dbHelper.database;
+    return await db.rawQuery('''
+    SELECT p.id, p.name, p.price, p.category_id, c.name as category_name
+    FROM products p
+    JOIN categories c ON p.category_id = c.id
+    ORDER BY p.name ASC
+  ''');
   }
 }

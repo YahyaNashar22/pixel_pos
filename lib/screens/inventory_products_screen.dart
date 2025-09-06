@@ -17,14 +17,18 @@ class _InventoryProductsScreenState extends State<InventoryProductsScreen> {
 
   List<Map<String, dynamic>> _categories = [];
   List<Map<String, dynamic>> _products = [];
+  List<Map<String, dynamic>> _filteredProducts = [];
+
+  final TextEditingController _searchController = TextEditingController();
 
   Future<void> _loadData() async {
     final cats = await _dbCategoryService.getAllCategories();
-    final prods = await _dbProductsService.getAllProducts();
+    final prods = await _dbProductsService.getAllProductsWithCategory();
 
     setState(() {
       _categories = cats;
       _products = prods;
+      _filteredProducts = prods;
     });
   }
 
@@ -120,46 +124,93 @@ class _InventoryProductsScreenState extends State<InventoryProductsScreen> {
     return cat['name'];
   }
 
+  void _filterProducts(String query) {
+    final q = query.toLowerCase();
+    setState(() {
+      _filteredProducts = _products.where((p) {
+        final productName = p['name'].toString().toLowerCase();
+        final categoryName = p['category_name'].toString().toLowerCase();
+        return productName.contains(q) || categoryName.contains(q);
+      }).toList();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _loadData();
+
+    _searchController.addListener(() {
+      _filterProducts(_searchController.text);
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _searchController.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _products.isEmpty
-          ? const Center(child: Text("No products found"))
-          : ListView.builder(
-              itemCount: _products.length,
-              itemBuilder: (context, index) {
-                final prod = _products[index];
-                return ListTile(
-                  title: Text("${prod['name']} - ${prod['price']}"),
-                  subtitle: Text(_getCategoryName(prod['category_id'])),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        onPressed: () => _addOrEditProduct(product: prod),
-                        icon: const Icon(
-                          Icons.edit,
-                          color: AppTheme.primaryColor,
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => _deleteProduct(prod['id']),
-                        icon: const Icon(
-                          Icons.delete,
-                          color: AppTheme.errorColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+      body: Column(
+        children: [
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: "Search by product or category...",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
+          ),
+          Expanded(
+            child: _filteredProducts.isEmpty
+                ? const Center(child: Text("No products found"))
+                : ListView.builder(
+                    itemCount: _filteredProducts.length,
+                    itemBuilder: (context, index) {
+                      final prod = _filteredProducts[index];
+                      return ListTile(
+                        title: Text("${prod['name']} - ${prod['price']}"),
+                        subtitle: Text(
+                          _getCategoryName(prod['category_id']),
+                          style: const TextStyle(
+                            fontStyle: FontStyle.italic,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              onPressed: () => _addOrEditProduct(product: prod),
+                              icon: const Icon(
+                                Icons.edit,
+                                color: AppTheme.primaryColor,
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => _deleteProduct(prod['id']),
+                              icon: const Icon(
+                                Icons.delete,
+                                color: AppTheme.errorColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addOrEditProduct(),
         child: const Icon(Icons.add),

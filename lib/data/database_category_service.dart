@@ -12,7 +12,7 @@ class DatabaseCategoryService {
   // get all categories
   Future<List<Map<String, dynamic>>> getAllCategories() async {
     final db = await _dbHelper.database;
-    return await db.query('categories');
+    return await db.query('categories', orderBy: 'name ASC');
   }
 
   // get by id
