@@ -4,6 +4,7 @@ import 'package:pixel_pos/data/database_invoice_service.dart';
 import 'package:pixel_pos/data/database_products_service.dart';
 import 'package:pixel_pos/data/database_sale_order_service.dart';
 import 'package:pixel_pos/theme/app_theme.dart';
+import 'package:pixel_pos/utils/horizontal_scroll_behavior.dart';
 
 class PosOrderScreen extends StatefulWidget {
   const PosOrderScreen({super.key});
@@ -21,6 +22,7 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
 
   List<Map<String, dynamic>> _categories = [];
   List<Map<String, dynamic>> _products = [];
+  List<Map<String, dynamic>> _filteredProducts = [];
   List<Map<String, dynamic>> _saleOrders = [];
   final Map<String, dynamic> _invoice = {};
 
@@ -32,12 +34,21 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
     setState(() {
       _categories = cats;
       _products = prods;
+      _filteredProducts = prods;
     });
   }
 
   void _selectCategory(int id) {
     setState(() {
-      selectedCategory = selectedCategory == id ? null : id;
+      if (selectedCategory == id) {
+        selectedCategory = null;
+        _filteredProducts = _products;
+      } else {
+        selectedCategory = id;
+        _filteredProducts = _products
+            .where((prod) => prod['category_id'] == id)
+            .toList();
+      }
     });
   }
 
@@ -70,34 +81,40 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
           children: [
             // Categories row
             _categories.isEmpty
-                ? const Text("No categories found!")
+                ? Center(child: const Text("No categories found!"))
                 : SizedBox(
                     height: 35,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _categories.length,
-                      itemBuilder: (context, index) {
-                        final cat = _categories[index];
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: selectedCategory == cat['id']
-                                  ? AppTheme.secondaryColor
-                                  : AppTheme.primaryColor,
+                    width: MediaQuery.of(context).size.width - 350,
+                    child: ScrollConfiguration(
+                      behavior: HorizontalScrollBehavior(),
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _categories.length,
+                        itemBuilder: (context, index) {
+                          final cat = _categories[index];
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8.0,
                             ),
-                            onPressed: () => _selectCategory(cat['id']),
-                            child: Text(cat['name']),
-                          ),
-                        );
-                      },
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: selectedCategory == cat['id']
+                                    ? AppTheme.secondaryColor
+                                    : AppTheme.primaryColor,
+                              ),
+                              onPressed: () => _selectCategory(cat['id']),
+                              child: Text(cat['name']),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ),
             const SizedBox(height: 20),
             // Products grid
             Expanded(
-              child: _products.isEmpty
-                  ? const Text("No products found!")
+              child: _filteredProducts.isEmpty
+                  ? Center(child: const Text("No products found!"))
                   : GridView.builder(
                       padding: const EdgeInsets.all(8.0),
                       gridDelegate:
@@ -107,9 +124,9 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
                             crossAxisSpacing: 8,
                             mainAxisSpacing: 8,
                           ),
-                      itemCount: _products.length,
+                      itemCount: _filteredProducts.length,
                       itemBuilder: (context, index) {
-                        final prod = _products[index];
+                        final prod = _filteredProducts[index];
                         return Card(
                           child: InkWell(
                             onTap: () {},

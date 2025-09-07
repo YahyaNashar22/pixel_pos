@@ -132,7 +132,7 @@ class _InventoryCategoriesScreenState extends State<InventoryCategoriesScreen> {
               controller: _searchController,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search),
-                hintText: "Search by product or category...",
+                hintText: "Search category...",
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
