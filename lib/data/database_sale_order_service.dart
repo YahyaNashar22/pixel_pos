@@ -48,4 +48,16 @@ class DatabaseSaleOrderService {
     final db = await _dbHelper.database;
     return await db.delete('sale_orders', where: 'id = ?', whereArgs: [id]);
   }
+
+  // get sale orders by invoice id
+  Future<List<Map<String, dynamic>>> getSaleOrdersByInvoiceId(
+    int invoiceId,
+  ) async {
+    final db = await _dbHelper.database;
+    return await db.query(
+      'sale_orders',
+      where: 'invoice_id = ?',
+      whereArgs: [invoiceId],
+    );
+  }
 }

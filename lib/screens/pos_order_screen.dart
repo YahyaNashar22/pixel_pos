@@ -7,7 +7,9 @@ import 'package:pixel_pos/theme/app_theme.dart';
 import 'package:pixel_pos/utils/horizontal_scroll_behavior.dart';
 
 class PosOrderScreen extends StatefulWidget {
-  const PosOrderScreen({super.key});
+  final int? invoiceId;
+  final void Function(int, {int? invoiceId}) onTabChange;
+  const PosOrderScreen({super.key, this.invoiceId, required this.onTabChange});
 
   @override
   State<PosOrderScreen> createState() => _PosOrderScreenState();
@@ -23,7 +25,7 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
   List<Map<String, dynamic>> _categories = [];
   List<Map<String, dynamic>> _products = [];
   List<Map<String, dynamic>> _filteredProducts = [];
-  List<Map<String, dynamic>> _selectedProducts = [];
+  final List<Map<String, dynamic>> _selectedProducts = [];
 
   final TextEditingController _invoiceNameController = TextEditingController();
 
@@ -64,6 +66,7 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
   }
 
   Future<void> _placeOrder() async {
+    // validation
     if (_invoiceNameController.text.isEmpty || _selectedProducts.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Invoice name and products are required")),
@@ -76,12 +79,34 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
       (sum, prod) => sum + (prod['price'] as num).toDouble(),
     );
 
-    // create invoice
-    final invoiceId = await _dbInvoiceService.createInvoice(
-      _invoiceNameController.text,
-      'pending',
-      total,
-    );
+    // create / update invoice
+    int invoiceId;
+
+    if (widget.invoiceId == null) {
+      invoiceId = await _dbInvoiceService.createInvoice(
+        _invoiceNameController.text,
+        'pending',
+        total,
+      );
+    } else {
+      invoiceId = widget.invoiceId!;
+      await _dbInvoiceService.updateInvoice(
+        invoiceId,
+        _invoiceNameController.text,
+        'pending',
+        total,
+      );
+    }
+
+    // clear old sale orders if editing existed
+    if (widget.invoiceId != null) {
+      final saleOrders = await _dbSaleOrderService.getSaleOrdersByInvoiceId(
+        invoiceId,
+      );
+      for (final saleOrder in saleOrders) {
+        await _dbSaleOrderService.deleteSaleOrder(saleOrder['id']);
+      }
+    }
 
     // create sale orders
     for (final prod in _selectedProducts) {
@@ -101,10 +126,38 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
     }
   }
 
+  Future<void> _loadInvoice(int invoiceId) async {
+    // fetch invoice and its sale orders from DB
+    final invoice = await _dbInvoiceService.getInvoiceById(invoiceId);
+    if (invoice == null) return;
+
+    final saleOrders = await _dbSaleOrderService.getSaleOrdersByInvoiceId(
+      invoiceId,
+    );
+    final products = <Map<String, dynamic>>[];
+    for (final saleOrder in saleOrders) {
+      final prod = _products.firstWhere(
+        (p) => p['id'] == saleOrder['product_id'],
+      );
+      products.add(prod);
+    }
+    // setState with invoice and orders
+    setState(() {
+      _invoiceNameController.text = invoice['name'];
+      _selectedProducts.clear();
+      _selectedProducts.addAll(products);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _fetchCategoriesAndProducts();
+
+    if (widget.invoiceId != null) {
+      debugPrint('loaded invoice: ${widget.invoiceId}');
+      _loadInvoice(widget.invoiceId!);
+    }
   }
 
   @override

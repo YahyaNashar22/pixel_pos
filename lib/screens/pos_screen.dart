@@ -13,24 +13,41 @@ class PosScreen extends StatefulWidget {
 
 class _PosScreenState extends State<PosScreen> {
   int _selectedIndex = 0;
+  int? _selectedInvoiceId;
 
-  final List<Widget> _screens = [
-    PosOrderScreen(),
-    PosTablesScreen(),
-    PosInvoicesScreen(),
-  ];
+  late final List<Widget> screens;
 
-  void _onItemTapped(int index) {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  void _onItemTapped(int index, {int? invoiceId}) {
     setState(() {
+      if (index == 0 && _selectedIndex == 0) {
+        // already on PosOrderScreen, reset it
+        _selectedInvoiceId = null;
+      } else {
+        _selectedInvoiceId = invoiceId;
+      }
       _selectedIndex = index;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final screens = [
+      PosOrderScreen(
+        key: ValueKey(_selectedInvoiceId),
+        onTabChange: _onItemTapped,
+        invoiceId: _selectedInvoiceId,
+      ),
+      PosTablesScreen(onTabChange: _onItemTapped),
+      PosInvoicesScreen(onTabChange: _onItemTapped),
+    ];
     return Scaffold(
       appBar: AppBar(title: const Text("POS")),
-      body: _screens[_selectedIndex],
+      body: screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,

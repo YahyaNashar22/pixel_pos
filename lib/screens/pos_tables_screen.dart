@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:pixel_pos/data/database_invoice_service.dart';
 
 class PosTablesScreen extends StatefulWidget {
-  const PosTablesScreen({super.key});
+  final void Function(int, {int? invoiceId}) onTabChange;
+  const PosTablesScreen({super.key, required this.onTabChange});
 
   @override
   State<PosTablesScreen> createState() => _PosTablesScreenState();
@@ -42,7 +43,9 @@ class _PosTablesScreenState extends State<PosTablesScreen> {
               final table = _tables[index];
               return Card(
                 child: InkWell(
-                  onTap: () {},
+                  onTap: () {
+                    widget.onTabChange(0, invoiceId: table['id']);
+                  },
                   child: Center(child: Text(table['name'])),
                 ),
               );
