@@ -23,10 +23,11 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
   List<Map<String, dynamic>> _categories = [];
   List<Map<String, dynamic>> _products = [];
   List<Map<String, dynamic>> _filteredProducts = [];
-  List<Map<String, dynamic>> _saleOrders = [];
-  final Map<String, dynamic> _invoice = {};
+  List<Map<String, dynamic>> _selectedProducts = [];
 
-  int? selectedCategory;
+  final TextEditingController _invoiceNameController = TextEditingController();
+
+  int? _selectedCategory;
 
   Future<void> _fetchCategoriesAndProducts() async {
     final cats = await _dbCategoryService.getAllCategories();
@@ -40,11 +41,11 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
 
   void _selectCategory(int id) {
     setState(() {
-      if (selectedCategory == id) {
-        selectedCategory = null;
+      if (_selectedCategory == id) {
+        _selectedCategory = null;
         _filteredProducts = _products;
       } else {
-        selectedCategory = id;
+        _selectedCategory = id;
         _filteredProducts = _products
             .where((prod) => prod['category_id'] == id)
             .toList();
@@ -52,10 +53,64 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
     });
   }
 
+  void _addProduct(Map<String, dynamic> product) {
+    setState(() {
+      _selectedProducts.add(product);
+    });
+  }
+
+  void removeProduct(int index) {
+    _selectedProducts.removeAt(index);
+  }
+
+  Future<void> _placeOrder() async {
+    if (_invoiceNameController.text.isEmpty || _selectedProducts.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Invoice name and products are required")),
+      );
+      return;
+    }
+    // calculate total
+    double total = _selectedProducts.fold(
+      0,
+      (sum, prod) => sum + (prod['price'] as num).toDouble(),
+    );
+
+    // create invoice
+    final invoiceId = await _dbInvoiceService.createInvoice(
+      _invoiceNameController.text,
+      'pending',
+      total,
+    );
+
+    // create sale orders
+    for (final prod in _selectedProducts) {
+      await _dbSaleOrderService.createSaleOrder(prod['id'], invoiceId);
+    }
+
+    // reset state
+    setState(() {
+      _selectedProducts.clear();
+      _invoiceNameController.clear();
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Order placed successfully")),
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _fetchCategoriesAndProducts();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _invoiceNameController.dispose();
   }
 
   @override
@@ -98,7 +153,7 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
                             ),
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: selectedCategory == cat['id']
+                                backgroundColor: _selectedCategory == cat['id']
                                     ? AppTheme.secondaryColor
                                     : AppTheme.primaryColor,
                               ),
@@ -129,7 +184,7 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
                         final prod = _filteredProducts[index];
                         return Card(
                           child: InkWell(
-                            onTap: () {},
+                            onTap: () => _addProduct(prod),
                             child: Center(child: Text(prod['name'])),
                           ),
                         );
@@ -147,7 +202,50 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
       width: 350,
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(color: Colors.white12),
-      child: Column(children: [Expanded(child: const Text("right"))]),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          TextField(
+            controller: _invoiceNameController,
+            decoration: const InputDecoration(
+              labelText: "Invoice name",
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: _selectedProducts.isEmpty
+                ? const Center(child: Text("No products added"))
+                : ListView.builder(
+                    itemCount: _selectedProducts.length,
+                    itemBuilder: (context, index) {
+                      final prod = _selectedProducts[index];
+                      return Dismissible(
+                        key: ValueKey(prod['id'].toString() + index.toString()),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          color: AppTheme.errorColor,
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: const Icon(Icons.delete),
+                        ),
+                        child: ListTile(
+                          title: Text(prod['name']),
+                          subtitle: Text(prod['price'].toString()),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+          ElevatedButton(
+            onPressed: _placeOrder,
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 48),
+            ),
+            child: const Text("Place Order"),
+          ),
+        ],
+      ),
     );
   }
 }

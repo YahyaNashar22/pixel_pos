@@ -8,7 +8,7 @@ class DatabaseSaleOrderService {
     final db = await _dbHelper.database;
     return await db.insert('sale_orders', {
       'product_id': productId,
-      'invoiceId': invoiceId,
+      'invoice_id': invoiceId,
     });
   }
 
