@@ -4,7 +4,10 @@ import 'package:pixel_pos/data/database_invoice_service.dart';
 import 'package:pixel_pos/data/database_products_service.dart';
 import 'package:pixel_pos/data/database_sale_order_service.dart';
 import 'package:pixel_pos/theme/app_theme.dart';
+import 'package:pixel_pos/utils/generate_invoice_pdf.dart';
 import 'package:pixel_pos/utils/horizontal_scroll_behavior.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class PosOrderScreen extends StatefulWidget {
   final int? invoiceId;
@@ -147,6 +150,24 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
       _selectedProducts.clear();
       _selectedProducts.addAll(products);
     });
+  }
+
+  Future<void> _printInvoice() async {
+    // validation
+    if (_invoiceNameController.text.isEmpty || _selectedProducts.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Invoice name and products are required")),
+      );
+      return;
+    }
+
+    final pdf = generateInvoicePdf(
+      invoiceName: _invoiceNameController.text,
+      products: _selectedProducts,
+    );
+
+    // Preview + print
+    await Printing.layoutPdf(onLayout: (format) async => pdf.save());
   }
 
   @override
@@ -296,6 +317,16 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
               minimumSize: const Size(double.infinity, 48),
             ),
             child: const Text("Place Order"),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _printInvoice,
+            icon: const Icon(Icons.print),
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 48),
+              backgroundColor: AppTheme.secondaryColor,
+            ),
+            label: const Text("Print"),
           ),
         ],
       ),
