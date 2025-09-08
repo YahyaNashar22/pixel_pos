@@ -14,9 +14,17 @@ class DatabaseInvoiceService {
   }
 
   // get all invoices
-  Future<List<Map<String, dynamic>>> getAllInvoices() async {
+  Future<List<Map<String, dynamic>>> getAllInvoices(String? status) async {
     final db = await _dbHelper.database;
-    return await db.query('invoices');
+    if (status == null) {
+      return await db.query('invoices');
+    } else {
+      return await db.query(
+        'invoices',
+        where: 'status = ?',
+        whereArgs: [status],
+      );
+    }
   }
 
   // get by id
