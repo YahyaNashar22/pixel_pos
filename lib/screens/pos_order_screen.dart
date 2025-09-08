@@ -6,7 +6,6 @@ import 'package:pixel_pos/data/database_sale_order_service.dart';
 import 'package:pixel_pos/theme/app_theme.dart';
 import 'package:pixel_pos/utils/generate_invoice_pdf.dart';
 import 'package:pixel_pos/utils/horizontal_scroll_behavior.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 class PosOrderScreen extends StatefulWidget {
@@ -33,6 +32,8 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
   final TextEditingController _invoiceNameController = TextEditingController();
 
   int? _selectedCategory;
+
+  bool _isClosed = false;
 
   Future<void> _fetchCategoriesAndProducts() async {
     final cats = await _dbCategoryService.getAllCategories();
@@ -134,6 +135,8 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
     final invoice = await _dbInvoiceService.getInvoiceById(invoiceId);
     if (invoice == null) return;
 
+    debugPrint(invoice['status']);
+
     final saleOrders = await _dbSaleOrderService.getSaleOrdersByInvoiceId(
       invoiceId,
     );
@@ -149,6 +152,7 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
       _invoiceNameController.text = invoice['name'];
       _selectedProducts.clear();
       _selectedProducts.addAll(products);
+      _isClosed = invoice['status'] == 'closed';
     });
   }
 
@@ -170,13 +174,104 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
     await Printing.layoutPdf(onLayout: (format) async => pdf.save());
   }
 
+  Future<void> _closeInvoice() async {
+    // validation
+    if (_invoiceNameController.text.isEmpty || _selectedProducts.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Invoice name and products are required")),
+      );
+      return;
+    }
+
+    final total = _selectedProducts.fold<double>(
+      0,
+      (sum, prod) => sum + (prod['price'] as num).toDouble(),
+    );
+
+    final controller = TextEditingController();
+
+    final result = await showDialog<double>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Close Invoice"),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: "Amount received",
+              prefixText: "\$ ",
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final received = double.tryParse(controller.text);
+                if (received == null || received < total) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Invalid amount"),
+                      duration: Duration(seconds: 5),
+                    ),
+                  );
+                  return;
+                }
+                Navigator.of(context).pop(received);
+              },
+              child: const Text("Confirm"),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == null) return;
+
+    final change = result - total;
+    // update invoice in DB
+    if (widget.invoiceId != null) {
+      await _dbInvoiceService.updateInvoice(
+        widget.invoiceId!,
+        _invoiceNameController.text,
+        'closed',
+        total,
+      );
+    }
+    final pdf = generateInvoicePdf(
+      invoiceName: _invoiceNameController.text,
+      products: _selectedProducts,
+    );
+
+    // Preview + print
+    await Printing.layoutPdf(onLayout: (format) async => pdf.save());
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Invoice closed. Change: \$${change.toStringAsFixed(2)}",
+          ),
+        ),
+      );
+
+      setState(() {
+        _selectedProducts.clear();
+        _invoiceNameController.clear();
+      });
+    }
+  }
+
   @override
   void initState() {
+    debugPrint("$_isClosed");
     super.initState();
     _fetchCategoriesAndProducts();
 
     if (widget.invoiceId != null) {
-      debugPrint('loaded invoice: ${widget.invoiceId}');
       _loadInvoice(widget.invoiceId!);
     }
   }
@@ -311,22 +406,45 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
                     },
                   ),
           ),
+          Text(
+            "Total: \$${_selectedProducts.fold<double>(0, (sum, prod) => sum + (prod['price'] as num).toDouble())}",
+            style: TextStyle(color: AppTheme.secondaryColor),
+          ),
+          const SizedBox(height: 16),
+
           ElevatedButton(
             onPressed: _placeOrder,
             style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 48),
+              minimumSize: const Size(double.infinity, 32),
             ),
             child: const Text("Place Order"),
           ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: _printInvoice,
-            icon: const Icon(Icons.print),
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 48),
-              backgroundColor: AppTheme.secondaryColor,
-            ),
-            label: const Text("Print"),
+          const SizedBox(height: 6),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ElevatedButton.icon(
+                onPressed: _printInvoice,
+                icon: const Icon(Icons.print),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(12, 32),
+                  backgroundColor: AppTheme.secondaryColor,
+                ),
+                label: const Text("Print"),
+              ),
+
+              if (_isClosed == false)
+                ElevatedButton.icon(
+                  onPressed: _closeInvoice,
+                  icon: const Icon(Icons.lock),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(12, 32),
+                    backgroundColor: Colors.green,
+                  ),
+                  label: const Text("Close Invoice"),
+                ),
+            ],
           ),
         ],
       ),
