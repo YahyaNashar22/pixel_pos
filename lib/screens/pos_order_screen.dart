@@ -353,7 +353,7 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
                         final prod = _filteredProducts[index];
                         return Card(
                           child: InkWell(
-                            onTap: () => _addProduct(prod),
+                            onTap: () => _isClosed ? null : _addProduct(prod),
                             child: Center(child: Text(prod['name'])),
                           ),
                         );
@@ -391,7 +391,13 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
                       final prod = _selectedProducts[index];
                       return Dismissible(
                         key: ValueKey(prod['id'].toString() + index.toString()),
-                        direction: DismissDirection.endToStart,
+                        direction: _isClosed
+                            ? DismissDirection.none
+                            : DismissDirection.endToStart,
+                        onDismissed: (direction) {
+                          removeProduct(index);
+                          debugPrint(_selectedProducts.toString());
+                        },
                         background: Container(
                           color: AppTheme.errorColor,
                           alignment: Alignment.centerRight,
@@ -412,13 +418,14 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
           ),
           const SizedBox(height: 16),
 
-          ElevatedButton(
-            onPressed: _placeOrder,
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 32),
+          if (!_isClosed)
+            ElevatedButton(
+              onPressed: _placeOrder,
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 32),
+              ),
+              child: const Text("Place Order"),
             ),
-            child: const Text("Place Order"),
-          ),
           const SizedBox(height: 6),
 
           Row(
@@ -434,7 +441,7 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
                 label: const Text("Print"),
               ),
 
-              if (_isClosed == false)
+              if (!_isClosed)
                 ElevatedButton.icon(
                   onPressed: _closeInvoice,
                   icon: const Icon(Icons.lock),
