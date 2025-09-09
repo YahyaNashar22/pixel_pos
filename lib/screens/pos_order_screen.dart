@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:pixel_pos/data/database_category_service.dart';
 import 'package:pixel_pos/data/database_invoice_service.dart';
 import 'package:pixel_pos/data/database_products_service.dart';
@@ -23,6 +24,8 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
   final DatabaseSaleOrderService _dbSaleOrderService =
       DatabaseSaleOrderService();
   final DatabaseInvoiceService _dbInvoiceService = DatabaseInvoiceService();
+
+  final formatter = NumberFormat("#,###");
 
   List<Map<String, dynamic>> _categories = [];
   List<Map<String, dynamic>> _products = [];
@@ -200,7 +203,7 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
               labelText: "Amount received",
-              prefixText: "\$ ",
+              suffixText: " LBP",
             ),
           ),
           actions: [
@@ -252,9 +255,7 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            "Invoice closed. Change: \$${change.toStringAsFixed(2)}",
-          ),
+          content: Text("Invoice closed. Change: ${change.toString()} LBP"),
         ),
       );
 
@@ -406,14 +407,20 @@ class _PosOrderScreenState extends State<PosOrderScreen> {
                         ),
                         child: ListTile(
                           title: Text(prod['name']),
-                          subtitle: Text(prod['price'].toString()),
+                          subtitle: Text(
+                            prod['price'] % 1 == 0
+                                ? prod['price']
+                                      .toInt()
+                                      .toString() // no decimals if whole number
+                                : prod['price'].toString(),
+                          ),
                         ),
                       );
                     },
                   ),
           ),
           Text(
-            "Total: \$${_selectedProducts.fold<double>(0, (sum, prod) => sum + (prod['price'] as num).toDouble())}",
+            "Total: ${formatter.format(_selectedProducts.fold<double>(0, (sum, prod) => sum + (prod['price'] as num).toDouble()))} LBP",
             style: TextStyle(color: AppTheme.secondaryColor),
           ),
           const SizedBox(height: 16),

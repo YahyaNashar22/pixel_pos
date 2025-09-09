@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:pixel_pos/data/database_category_service.dart';
 import 'package:pixel_pos/data/database_products_service.dart';
 import 'package:pixel_pos/theme/app_theme.dart';
@@ -14,6 +15,8 @@ class InventoryProductsScreen extends StatefulWidget {
 class _InventoryProductsScreenState extends State<InventoryProductsScreen> {
   final DatabaseCategoryService _dbCategoryService = DatabaseCategoryService();
   final DatabaseProductService _dbProductsService = DatabaseProductService();
+
+  final formatter = NumberFormat('#,###');
 
   List<Map<String, dynamic>> _categories = [];
   List<Map<String, dynamic>> _products = [];
@@ -183,7 +186,7 @@ class _InventoryProductsScreenState extends State<InventoryProductsScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(prod['name']),
-                            Text("${prod['price']}\$"),
+                            Text("${formatter.format(prod['price'])} LBP"),
                           ],
                         ),
                         subtitle: Text(

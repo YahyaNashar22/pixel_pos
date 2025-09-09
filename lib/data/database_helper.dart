@@ -24,7 +24,14 @@ class DatabaseHelper {
 
     debugPrint("📂 Database path: $path");
 
-    return await openDatabase(path, version: _dbVersion, onCreate: _onCreate);
+    return await openDatabase(
+      path,
+      version: _dbVersion,
+      onCreate: _onCreate,
+      onOpen: (db) async {
+        await db.execute('PRAGMA foreign_keys = ON');
+      },
+    );
   }
 
   Future<void> _onCreate(Database db, int version) async {
